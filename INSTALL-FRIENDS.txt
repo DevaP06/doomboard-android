@@ -1,7 +1,7 @@
 🌀 *Doomboard* – counts how many Instagram Reels you scroll + a leaderboard to see who's the most cooked 🧟
 
 📥 *Download:*
-https://github.com/DevaP06/Doomscorls/releases/latest/download/doomboard.apk
+https://github.com/DevaP06/doomboard-android/releases/latest/download/doomboard.apk
 
 *How to install (2 min):*
 1️⃣ Open the link, download, then tap the file to install.
