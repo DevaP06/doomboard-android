@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Doomboard</string>
+
+    <!-- Shown by Android in Settings > Accessibility > Doomboard -->
+    <string name="service_description">Counts how many Instagram Reels you scroll. It only works inside the Instagram app and only notices when you swipe to a new Reel. It never reads captions, messages, usernames or what you watch, and does not record your screen.</string>
+
+    <!-- Prominent disclosure shown before sending the user to Accessibility settings -->
+    <string name="disclosure">Doomboard uses Android\'s Accessibility Service to count your Instagram Reels.\n\nWhat it uses: only inside the Instagram app, it notices when you swipe to a new Reel, from the screen\'s layout (which part is scrolling).\n\nWhat it never does: it does not read captions, messages, usernames or what you watch, does not record your screen, and does nothing in any other app.\n\nYour counts stay on this phone unless you join the leaderboard.\n\nOn the next screen, tap Doomboard and turn it on.</string>
+
+    <string name="join_info">Doomboard counts your Reels on this phone. If you join the global leaderboard, it shares only your nickname and daily totals (reels and minutes), never what you watch. Leave any time and your data is deleted.</string>
+</resources>
