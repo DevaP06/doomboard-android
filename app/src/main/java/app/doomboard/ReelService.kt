@@ -46,8 +46,8 @@ class ReelService : AccessibilityService() {
         Debug.log("scroll ${e.className?.toString()?.substringAfterLast('.')} from=$idx to=${e.toIndex} items=${e.itemCount}")
         val now = SystemClock.elapsedRealtime()
         if (idx >= 0) {
-            if (idx != lastIndex) {
-                if (lastIndex != -1) countReel() // first index seen just sets the baseline
+            if (idx != lastIndex) { // includes the first reel shown on entering Reels, like the extension
+                countReel()
                 lastIndex = idx
             }
         } else if (now - lastScrollAt > BURST_GAP_MS) {

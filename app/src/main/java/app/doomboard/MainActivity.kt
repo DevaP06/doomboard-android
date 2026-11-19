@@ -80,12 +80,15 @@ class MainActivity : Activity() {
         boardBox = vbox()
         col.addView(boardBox, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         col.addView(divider())
+        // Hidden developer toggle: long-press the big number to show/hide the debug log.
         debugText = text("", 10f).apply { gravity = Gravity.START; typeface = Typeface.MONOSPACE; visibility = View.GONE }
-        col.addView(link("debug log") {
+        count.setOnLongClickListener {
             Debug.enabled = !Debug.enabled
             debugText.visibility = if (Debug.enabled) View.VISIBLE else View.GONE
             debugText.text = Debug.text()
-        })
+            Toast.makeText(this, "debug log ${if (Debug.enabled) "on" else "off"}", Toast.LENGTH_SHORT).show()
+            true
+        }
         col.addView(debugText, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         val scroll = ScrollView(this).apply {
