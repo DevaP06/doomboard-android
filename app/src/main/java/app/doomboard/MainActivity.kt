@@ -39,6 +39,10 @@ class MainActivity : Activity() {
     private lateinit var font: Typeface
     private val main = Handler(Looper.getMainLooper())
 
+    private lateinit var scroll: ScrollView
+    private lateinit var greeting: TextView
+    private lateinit var roast: TextView
+    private lateinit var onboardBox: LinearLayout
     private lateinit var mood: TextView
     private lateinit var count: TextView
     private lateinit var title: TextView
@@ -58,6 +62,7 @@ class MainActivity : Activity() {
     private val tick = object : Runnable {
         override fun run() {
             renderStats()
+            renderGreeting()
             if (Debug.enabled) debugText.text = Debug.text()
             if (store.profile != null && mode == null && System.currentTimeMillis() - boardLoadedAt > 30_000) renderBoard()
             main.postDelayed(this, 1000)
@@ -70,9 +75,15 @@ class MainActivity : Activity() {
         font = resources.getFont(R.font.fredoka)
 
         val col = vbox().apply { setPadding(dp(20), dp(20), dp(20), dp(20)) }
+        greeting = text("", 22f).apply { gravity = Gravity.START }
+        roast = text("", 14f, alpha = 0.75f).apply { gravity = Gravity.START }
+        col.addView(greeting, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        col.addView(roast, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        onboardBox = vbox()
+        col.addView(onboardBox, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(14) })
         mood = text("", 44f)
         count = text("0", 72f, PINK)
-        col.addView(mood)
+        col.addView(mood, lp(top = 10))
         col.addView(count)
         col.addView(text("reels today", 14f, alpha = 0.7f))
         title = text("", 16f).apply { background = pill(Color.WHITE); setPadding(dp(14), dp(4), dp(14), dp(4)) }
@@ -105,7 +116,7 @@ class MainActivity : Activity() {
         }
         col.addView(debugText, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
-        val scroll = ScrollView(this).apply {
+        scroll = ScrollView(this).apply {
             addView(col)
             isFillViewport = true
             background = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(0xFFFFE4F1.toInt(), 0xFFE6E0FF.toInt()))
@@ -122,6 +133,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         statsSignature = null
+        renderGreeting()
         renderService()
         renderSettings()
         renderBoard()
@@ -185,6 +197,7 @@ class MainActivity : Activity() {
 
     // --- settings: daily limit alerts + pop-up counter ---
     private fun renderSettings() {
+        if (::onboardBox.isInitialized) renderOnboarding() // setting a limit ticks the checklist
         settingsBox.removeAllViews()
         val limit = store.limit
         settingsBox.addView(text("⏰ Daily doomscroll limit", 16f))
@@ -233,6 +246,62 @@ class MainActivity : Activity() {
         }
     }
 
+    // --- greeting + first-run setup checklist ---
+    private fun renderGreeting() {
+        greeting.text = Fun.greeting(LocalTime.now().hour, store.profile?.nick)
+        roast.text = Fun.roast(store.day().reels, store.limit)
+    }
+
+    private fun renderOnboarding() {
+        onboardBox.removeAllViews()
+        val counting = serviceEnabled()
+        val limitSet = store.limit > 0
+        val boardChosen = store.profile != null || store.optedOut
+        if (!store.onboarded && counting && limitSet && boardChosen) {
+            store.onboarded = true
+            Toast.makeText(this, "You're all set! Go scroll (responsibly) 🫡", Toast.LENGTH_LONG).show()
+        }
+        if (store.onboarded) { onboardBox.visibility = View.GONE; return }
+
+        onboardBox.visibility = View.VISIBLE
+        onboardBox.background = GradientDrawable().apply { setColor(0xD9FFFFFF.toInt()); cornerRadius = dp(20).toFloat() }
+        onboardBox.setPadding(dp(16), dp(14), dp(16), dp(10))
+        onboardBox.addView(text("✨ Let's get you set up", 18f))
+        onboardBox.addView(text("${listOf(counting, limitSet, boardChosen).count { it }} of 3 done", 12f, alpha = 0.6f))
+
+        setupStep(counting, "Turn on Reel counting", "So Doomboard can notice your swipes in Instagram")
+            ?.addView(button("Turn on") { showDisclosure() })
+        setupStep(limitSet, "Set a daily limit", "Get a nudge before you're fully cooked")?.let { box ->
+            val chips = LinearLayout(this)
+            for (n in listOf(50, 100, 200)) chips.addView(button("$n") {
+                store.limit = n
+                askNotificationPermission()
+                statsSignature = null
+                renderSettings()
+            }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginEnd = dp(6) })
+            box.addView(chips)
+        }
+        setupStep(boardChosen, "Join the leaderboard, or stay private", "Your call, you can change it later")
+            ?.addView(button("Choose") { scroll.smoothScrollTo(0, boardBox.top) })
+
+        onboardBox.addView(link("skip setup") { store.onboarded = true; renderOnboarding() })
+    }
+
+    // One checklist row. Returns a container for the step's action when it isn't done yet.
+    private fun setupStep(done: Boolean, title: String, hint: String): LinearLayout? {
+        val row = LinearLayout(this).apply { setPadding(0, dp(10), 0, 0) }
+        row.addView(text(if (done) "✅" else "⬜", 18f), LinearLayout.LayoutParams(dp(34), WRAP_CONTENT))
+        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        body.addView(text(title, 15f, alpha = if (done) 0.5f else 1f).apply { gravity = Gravity.START })
+        if (!done) body.addView(text(hint, 12f, alpha = 0.65f).apply { gravity = Gravity.START })
+        row.addView(body, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f))
+        onboardBox.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        if (done) return null
+        val action = LinearLayout(this).apply { setPadding(dp(34), dp(6), 0, dp(4)) }
+        onboardBox.addView(action, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        return action
+    }
+
     // --- turning on the counter (Accessibility Service) ---
     private fun serviceEnabled(): Boolean {
         val on = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
@@ -262,6 +331,7 @@ class MainActivity : Activity() {
 
     // --- leaderboard: undecided -> join screen; opted out -> invite; joined -> board ---
     private fun renderBoard() {
+        renderOnboarding() // joining / staying private ticks the checklist
         boardBox.removeAllViews()
         val profile = store.profile
         if (mode != null || (profile == null && !store.optedOut)) return renderJoin(profile)

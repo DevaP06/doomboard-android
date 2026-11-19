@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Doomboard: How cooked are you today?</title>
+<meta name="description" content="Doomboard counts every Instagram Reel you scroll, gives you a brainrot score, insights and limits, and an optional leaderboard to see who's the most cooked.">
+<meta property="og:title" content="Doomboard: How cooked are you today?">
+<meta property="og:description" content="Count every Reel you scroll. Get a brainrot score. Climb (or avoid) the doomscroll leaderboard.">
+<meta property="og:image" content="icon.png">
+<link rel="icon" href="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fff6fb; --bg2: #f1ecff; --card: #ffffffcc; --ink: #3d2541; --muted: #7a6380;
+    --pink: #ff5fa2; --pink2: #ff8fc2; --lav: #b9a8ff; --line: #f3cde3; --red: #e5383b;
+    --shadow: 0 10px 30px #c9709e22;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1a1220; --bg2: #221836; --card: #2a1f33cc; --ink: #fbeef6; --muted: #c4aecb;
+            --line: #4a3352; --shadow: 0 10px 30px #00000055; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: Fredoka, ui-rounded, "Trebuchet MS", system-ui, sans-serif; color: var(--ink);
+         background: linear-gradient(170deg, var(--bg), var(--bg2)); min-height: 100vh; line-height: 1.5; }
+  a { color: var(--pink); }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 64px 0; }
+  h1, h2, h3 { line-height: 1.15; margin: 0 0 12px; }
+  h2 { font-size: clamp(28px, 4.5vw, 40px); text-align: center; }
+  .sub { color: var(--muted); text-align: center; max-width: 620px; margin: 0 auto 36px; font-size: 18px; }
+
+  /* nav */
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 22px; text-decoration: none; color: var(--ink); }
+  .brand img { width: 36px; height: 36px; border-radius: 10px; }
+  nav .links a { margin-left: 18px; text-decoration: none; color: var(--muted); font-weight: 500; }
+  nav .links a:hover { color: var(--pink); }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; padding: 36px 0 72px; }
+  .hero h1 { font-size: clamp(42px, 7vw, 72px); font-weight: 700; }
+  .hero h1 span { color: var(--pink); }
+  .hero p { font-size: 20px; color: var(--muted); max-width: 520px; margin: 0 0 28px; }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border-radius: 99px; font: inherit; font-weight: 600;
+         font-size: 17px; text-decoration: none; border: 2px solid var(--pink2); cursor: pointer; transition: transform .15s; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.primary { background: var(--pink); color: #fff; border-color: var(--pink); box-shadow: 0 6px 0 #d94784; }
+  .btn.ghost { background: var(--card); color: var(--ink); }
+  .btn.soon { opacity: .6; cursor: default; }
+  .note { font-size: 14px; color: var(--muted); margin-top: 14px; }
+
+  /* phone demo */
+  .phone { justify-self: center; width: min(300px, 78vw); aspect-ratio: 9/18.5; border-radius: 38px; padding: 10px;
+           background: #120c18; box-shadow: var(--shadow), 0 0 0 2px #ffffff22 inset; position: relative; }
+  .screen { position: relative; width: 100%; height: 100%; border-radius: 30px; overflow: hidden; background: #000; }
+  .reel { position: absolute; inset: 0; display: grid; place-items: center; transition: transform .55s cubic-bezier(.6,0,.2,1); }
+  .reel::after { content: ""; width: 0; height: 0; border-left: 34px solid #ffffffcc; border-top: 21px solid transparent; border-bottom: 21px solid transparent; }
+  .pill { position: absolute; top: 34px; left: 50%; transform: translateX(-50%); background: var(--pink); color: #fff; padding: 6px 14px;
+          border-radius: 99px; font-weight: 600; font-size: 15px; white-space: nowrap; z-index: 2; transition: background .3s; }
+  .pill.pop { animation: pop .35s ease-out; }
+  .pill.over { background: var(--red); }
+  @keyframes pop { 30% { transform: translateX(-50%) scale(1.35); } 100% { transform: translateX(-50%) scale(1); } }
+  .caption { position: absolute; left: 14px; bottom: 18px; right: 60px; z-index: 2; color: #fff; font-size: 13px; opacity: .85; }
+  .caption b { display: block; width: 90px; height: 9px; border-radius: 9px; background: #ffffff99; margin-bottom: 6px; }
+  .caption i { display: block; width: 140px; height: 7px; border-radius: 9px; background: #ffffff66; }
+
+  /* cards */
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 22px; box-shadow: var(--shadow); backdrop-filter: blur(6px); }
+  .card .e { font-size: 34px; }
+  .card h3 { font-size: 20px; margin: 8px 0 6px; }
+  .card p { margin: 0; color: var(--muted); }
+
+  /* titles ladder */
+  .ladder { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  .rung { background: var(--card); border: 2px solid var(--line); border-radius: 99px; padding: 10px 18px; font-weight: 600; }
+  .rung small { color: var(--muted); font-weight: 500; margin-left: 6px; }
+
+  /* leaderboard */
+  .board { max-width: 520px; margin: 0 auto; background: var(--card); border: 1px solid var(--line); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); }
+  .row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; }
+  .row:nth-child(1) { background: #ffd86b33; } .row:nth-child(2) { background: #d9d9e833; } .row:nth-child(3) { background: #e8a87c2e; }
+  .row .rk { width: 34px; font-weight: 700; color: var(--muted); }
+  .row .nm { flex: 1; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .row .ct { font-weight: 700; color: var(--pink); }
+  .empty { text-align: center; color: var(--muted); padding: 24px; }
+
+  /* install steps */
+  .steps { counter-reset: s; display: grid; gap: 14px; max-width: 720px; margin: 0 auto; }
+  .step { counter-increment: s; display: flex; gap: 16px; align-items: flex-start; background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 18px; }
+  .step::before { content: counter(s); flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--pink); color: #fff; display: grid; place-items: center; font-weight: 700; }
+  .step p { margin: 4px 0 0; color: var(--muted); }
+  .warn { max-width: 720px; margin: 18px auto 0; border: 2px dashed var(--pink2); border-radius: 20px; padding: 18px 20px; background: var(--card); }
+  .warn h3 { font-size: 18px; }
+  .warn p, .warn li { color: var(--muted); }
+  .warn code { word-break: break-all; }
+
+  /* faq */
+  details { max-width: 720px; margin: 0 auto 12px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 18px; }
+  details p { color: var(--muted); margin: 10px 0 0; }
+
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0 50px; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; text-align: center; padding-top: 10px; }
+    .hero p { margin-left: auto; margin-right: auto; }
+    .btns { justify-content: center; }
+    .grid { grid-template-columns: 1fr 1fr; }
+    nav .links { display: none; }
+  }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } section { padding: 48px 0; } }
+  @media (prefers-reduced-motion: reduce) { .reel { transition: none; } .pill.pop { animation: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><img src="icon.png" alt="">Doomboard</a>
+    <div class="links"><a href="#features">Features</a><a href="#leaderboard">Leaderboard</a><a href="#install">Install</a><a href="#faq">FAQ</a></div>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <h1>How <span>cooked</span> are you today?</h1>
+      <p>Doomboard counts every Instagram Reel you scroll, roasts you with a brainrot score, and lets you see who's the most cooked on the leaderboard. 🧟</p>
+      <div class="btns">
+        <a class="btn primary" href="#install">📱 Get it for Android</a>
+        <span class="btn ghost soon" title="In store review">💻 Browser extension · soon</span>
+      </div>
+      <div class="note">Free · No ads · Your counts stay on your phone unless you join the leaderboard</div>
+    </div>
+
+    <div class="phone" aria-hidden="true">
+      <div class="screen" id="screen">
+        <div class="pill" id="pill">🌱 0 reels</div>
+        <div class="caption"><b></b><i></i></div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<section id="features">
+  <div class="wrap">
+    <h2>Your doomscrolling, finally in numbers</h2>
+    <p class="sub">Screen time says "3 hours". Doomboard says "247 reels, mostly at 1 AM". Which one hits harder?</p>
+    <div class="grid">
+      <div class="card"><div class="e">💬</div><h3>Live pop-up counter</h3><p>A tiny pill pops up on every swipe. You will feel judged. That's the point.</p></div>
+      <div class="card"><div class="e">🧠</div><h3>Brainrot Score</h3><p>0–100. Swiping fast and watching nothing pushes it up. Try to keep it low (you won't).</p></div>
+      <div class="card"><div class="e">📊</div><h3>Real insights</h3><p>Peak scroll hour, late-night reels, sessions, time per reel, and how many hours a month you're on pace for.</p></div>
+      <div class="card"><div class="e">⏰</div><h3>Daily limits</h3><p>Set a limit and get a nudge at 80%, at 100%, then every 20 more. Like a disappointed parent, but cute.</p></div>
+      <div class="card"><div class="e">🔥</div><h3>Streaks</h3><p>Stay under your limit and build a streak. Break it and the chart turns red. No pressure.</p></div>
+      <div class="card"><div class="e">🏆</div><h3>Optional leaderboard</h3><p>Pick a nickname and see who's the most cooked today. Or stay private. Your call.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Which one are you?</h2>
+    <p class="sub">Your title changes with your daily count.</p>
+    <div class="ladder">
+      <div class="rung">🌱 Touched Grass<small>0–9</small></div>
+      <div class="rung">🙂 Casual Scroller<small>10–49</small></div>
+      <div class="rung">🐇 Rabbit Hole Olympian<small>50–99</small></div>
+      <div class="rung">🫠 Brainrot Boss<small>100–199</small></div>
+      <div class="rung">🧟 Certified Zombie<small>200+</small></div>
+    </div>
+  </div>
+</section>
+
+<section id="leaderboard">
+  <div class="wrap">
+    <h2>🏆 Today's most cooked</h2>
+    <p class="sub">Live from the Doomboard leaderboard. Only people who chose to join appear here.</p>
+    <div class="board" id="board"><div class="empty">loading the damage…</div></div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install on Android</h2>
+    <p class="sub">Doomboard isn't on the Play Store yet, so you install it straight from our GitHub. Takes about 2 minutes.</p>
+    <div class="steps">
+      <div class="step"><div><b>Download the app</b><p><a href="https://github.com/DevaP06/doomboard-android/releases/latest/download/doomboard.apk">Download Doomboard (.apk)</a>, then open the file. If asked, allow "Install unknown apps" for your browser.</p></div></div>
+      <div class="step"><div><b>Android 13 or newer: allow restricted settings</b><p>Settings → Apps → Doomboard → ⋮ (top right) → Allow restricted settings.</p></div></div>
+      <div class="step"><div><b>Turn on counting</b><p>Open Doomboard → Turn on counting → Agree &amp; open settings → tap Doomboard → switch it on.</p></div></div>
+      <div class="step"><div><b>Scroll like normal 😅</b><p>Open Instagram Reels. The counter pops up as you swipe. Join the leaderboard whenever you're ready.</p></div></div>
+    </div>
+    <div class="warn">
+      <h3>🛡️ Seeing "App blocked to protect your device"?</h3>
+      <p>That's Google's anti-scam filter. It blocks any downloaded app that uses Accessibility (the feature Doomboard needs to notice your swipes) unless it comes from the Play Store. Two ways around it:</p>
+      <ul>
+        <li><b>Obtainium</b> (free, open-source app installer): install <a href="https://github.com/ImranR98/Obtainium/releases" rel="noopener">Obtainium</a>, tap <i>Add App</i>, paste <code>github.com/DevaP06/doomboard-android</code>, then Install. You also get update alerts.</li>
+        <li><b>Pause Play Protect for a minute:</b> Play Store → profile picture → Play Protect → ⚙️ → turn off "Scan apps", install Doomboard, then <b>turn it straight back on</b>. Only do this for apps you trust.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <details><summary>Can Doomboard see my messages or what I watch?</summary>
+      <p>No. It only works inside the Instagram app and only notices when you swipe to a new Reel, from the screen layout. It never reads captions, messages, usernames or what you watch, and it doesn't record your screen.</p></details>
+    <details><summary>What gets shared if I join the leaderboard?</summary>
+      <p>Only your chosen nickname, a random anonymous ID and your daily totals (reels and minutes). If you don't join, nothing leaves your phone. "Leave &amp; delete my data" in the app removes you completely.</p></details>
+    <details><summary>Why does it need Accessibility?</summary>
+      <p>Android has no other way for an app to notice swipes inside another app. Doomboard uses it only for Instagram and only to count. The app explains this before you turn it on, and you can switch it off any time in Settings.</p></details>
+    <details><summary>Is there an iPhone version?</summary>
+      <p>Not yet. Apple doesn't let apps see what happens inside other apps, so per-Reel counting isn't possible on iPhone.</p></details>
+    <details><summary>Does it work with TikTok or YouTube Shorts?</summary>
+      <p>Right now it's Instagram Reels only. More apps may come later.</p></details>
+    <details><summary>Is it free?</summary>
+      <p>Yes. No ads, no subscriptions. It's a solo side project.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Made with way too many reels 🫠 · <a href="https://github.com/DevaP06/doomboard-android">Source on GitHub</a> ·
+    <a href="https://github.com/DevaP06/Doomscorls/blob/main/PRIVACY.md">Privacy</a><br>
+    Doomboard is an independent project, not affiliated with Instagram or Meta.
+  </div>
+</footer>
+
+<script>
+  // --- animated phone demo: reels slide up, the counter pops ---
+  const COLORS = [["#ff8fc2","#7c5cff"],["#ffb86b","#ff5f6d"],["#5ee7df","#b490ca"],["#a1c4fd","#c2e9fb"],["#f6d365","#fda085"],["#84fab0","#8fd3f4"]];
+  const TITLES = [[200,"🧟"],[100,"🫠"],[50,"🐇"],[10,"🙂"],[0,"🌱"]];
+  const screen = document.getElementById("screen"), pill = document.getElementById("pill");
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let n = 0, cur = makeReel(0);
+  cur.style.transform = "translateY(0)";
+  function makeReel(i) {
+    const r = document.createElement("div");
+    const [a, b] = COLORS[i % COLORS.length];
+    r.className = "reel";
+    r.style.background = `linear-gradient(160deg, ${a}, ${b})`;
+    r.style.transform = "translateY(100%)";
+    screen.prepend(r);
+    return r;
+  }
+  function next() {
+    const nxt = makeReel(n + 1);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      cur.style.transform = "translateY(-100%)";
+      nxt.style.transform = "translateY(0)";
+    }));
+    const old = cur; cur = nxt;
+    setTimeout(() => old.remove(), 700);
+    n = n >= 130 ? 0 : n + (n < 40 ? 1 : 7); // speed up so all the titles show
+    const emoji = TITLES.find(([min]) => n >= min)[1];
+    pill.textContent = n >= 100 ? `🛑 ${n} / 100` : `${emoji} ${n} reels`;
+    pill.classList.toggle("over", n >= 100);
+    pill.classList.remove("pop"); void pill.offsetWidth; pill.classList.add("pop");
+  }
+  if (!reduce) setInterval(next, 1500);
+
+  // --- live leaderboard (public, read-only call; nicknames are inserted as text, never HTML) ---
+  const SUPABASE_URL = "https://uroqjdpvjqnyokrkwqox.supabase.co";
+  const KEY = "sb_publishable_-jnSoduh_Z594HWUb-fhPA_0aX4P99T"; // public key, same one the apps use
+  const board = document.getElementById("board");
+  fetch(`${SUPABASE_URL}/rest/v1/rpc/leaderboard`, {
+    method: "POST",
+    headers: { apikey: KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_day: new Date().toLocaleDateString("en-CA"), p_user: null }),
+  }).then((r) => r.ok ? r.json() : Promise.reject(r.status)).then((rows) => {
+    rows = rows.filter((x) => x.reels > 0).slice(0, 10);
+    board.textContent = "";
+    if (!rows.length) {
+      board.innerHTML = '<div class="empty">Nobody has scrolled yet today… suspicious 👀</div>';
+      return;
+    }
+    for (const x of rows) {
+      const row = document.createElement("div");
+      row.className = "row";
+      const emoji = TITLES.find(([min]) => x.reels >= min)[1];
+      for (const [cls, text] of [["rk", `#${x.rank}`], ["nm", `${emoji} ${x.nickname}`], ["ct", `${x.reels}`]]) {
+        const s = document.createElement("span");
+        s.className = cls;
+        s.textContent = text;
+        row.append(s);
+      }
+      board.append(row);
+    }
+  }).catch(() => { board.innerHTML = '<div class="empty">Couldn\'t load the leaderboard right now 😢</div>'; });
+</script>
+</body>
+</html>

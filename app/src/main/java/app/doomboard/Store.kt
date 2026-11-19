@@ -63,6 +63,11 @@ class Store(ctx: Context) {
         get() = p.getInt("limit", 0)
         set(v) { p.edit().putInt("limit", v).apply() }
 
+    // First-run setup checklist finished or skipped.
+    var onboarded: Boolean
+        get() = p.getBoolean("onboarded", false)
+        set(v) { p.edit().putBoolean("onboarded", v).apply() }
+
     // Show the pop-up counter over Instagram while scrolling Reels.
     var overlay: Boolean
         get() = p.getBoolean("overlay", true)
