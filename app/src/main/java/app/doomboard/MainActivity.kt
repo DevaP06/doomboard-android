@@ -1,8 +1,10 @@
 package app.doomboard
 
+import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
@@ -12,12 +14,14 @@ import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.text.InputFilter
+import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.WindowInsets
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -25,6 +29,7 @@ import android.widget.TextView
 import android.widget.Toast
 import java.io.IOException
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.concurrent.thread
@@ -39,12 +44,15 @@ class MainActivity : Activity() {
     private lateinit var title: TextView
     private lateinit var stats: TextView
     private lateinit var bars: LinearLayout
+    private lateinit var kpiGrid: LinearLayout
+    private lateinit var settingsBox: LinearLayout
     private lateinit var serviceBox: LinearLayout
     private lateinit var boardBox: LinearLayout
     private lateinit var debugText: TextView
 
     private var mode: String? = null // "join" (opted-out user came back) | "rename"
     private var boardLoadedAt = 0L
+    private var statsSignature: String? = null // skip re-rendering stats when nothing changed
 
     // Refresh every second while visible; reload the board every 30s.
     private val tick = object : Runnable {
@@ -74,6 +82,12 @@ class MainActivity : Activity() {
         bars = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         col.addView(bars, LinearLayout.LayoutParams(MATCH_PARENT, dp(90)).apply { topMargin = dp(12) })
         col.addView(text("reels, last 7 days", 11f, alpha = 0.6f))
+        col.addView(text("📊 Insights", 18f), lp(top = 18))
+        kpiGrid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(kpiGrid, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(8) })
+        col.addView(divider())
+        settingsBox = vbox()
+        col.addView(settingsBox, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         serviceBox = vbox()
         col.addView(serviceBox, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(16) })
         col.addView(divider())
@@ -107,7 +121,9 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
+        statsSignature = null
         renderService()
+        renderSettings()
         renderBoard()
         main.post(tick)
     }
@@ -119,26 +135,101 @@ class MainActivity : Activity() {
 
     // --- stats ---
     private fun renderStats() {
-        val d = store.day()
+        val today = LocalDate.now()
+        val hour = LocalTime.now().hour
+        val limit = store.limit
+        val sig = "${store.raw()}|$limit|$today|$hour"
+        if (sig == statsSignature) return
+        statsSignature = sig
+
+        val all = store.allDays()
+        val d = all[today] ?: Day()
         val (_, emoji, t) = Fun.titleFor(d.reels)
         mood.text = emoji
         count.text = d.reels.toString()
-        title.text = t
+        count.setTextColor(if (limit in 1..d.reels) RED else PINK)
+        title.text = if (limit > 0) "$t · ${d.reels}/$limit" else t
         val avg = if (d.reels > 0) d.secs / d.reels else 0
         stats.text = "⏱ ${d.secs / 60} min · ⚡ ${avg}s/reel · 🧠 rot ${Fun.rotScore(d.reels, d.secs)}/100"
 
+        // 7-day bars: today pink, days over the limit red
         bars.removeAllViews()
-        val week = (6 downTo 0).map { LocalDate.now().minusDays(it.toLong()) }
-        val reels = week.map { store.day(it).reels }
+        val week = (6 downTo 0).map { today.minusDays(it.toLong()) }
+        val reels = week.map { all[it]?.reels ?: 0 }
         val max = maxOf(1, reels.max())
         week.forEachIndexed { i, day ->
             val c = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL }
-            val bar = View(this).apply {
-                background = GradientDrawable().apply { setColor(if (i == 6) PINK else 0xFFD6CCFF.toInt()); cornerRadius = dp(4).toFloat() }
-            }
+            val color = when { limit in 1 until reels[i] -> RED; i == 6 -> PINK; else -> 0xFFD6CCFF.toInt() }
+            val bar = View(this).apply { background = GradientDrawable().apply { setColor(color); cornerRadius = dp(4).toFloat() } }
             c.addView(bar, LinearLayout.LayoutParams(dp(22), maxOf(dp(2), reels[i] * dp(60) / max)))
             c.addView(text(day.dayOfWeek.getDisplayName(TextStyle.NARROW, Locale.getDefault()), 11f))
             bars.addView(c, LinearLayout.LayoutParams(0, MATCH_PARENT, 1f))
+        }
+
+        // KPI tiles, two per row
+        kpiGrid.removeAllViews()
+        Stats.kpis(all, today, hour, limit).chunked(2).forEach { pair ->
+            val row = LinearLayout(this)
+            pair.forEach { k ->
+                val tile = vbox().apply {
+                    background = GradientDrawable().apply { setColor(0xB3FFFFFF.toInt()); cornerRadius = dp(16).toFloat() }
+                    setPadding(dp(8), dp(10), dp(8), dp(10))
+                }
+                tile.addView(text("${k.emoji} ${k.value}", 20f))
+                tile.addView(text(k.label, 11f, alpha = 0.7f))
+                row.addView(tile, LinearLayout.LayoutParams(0, WRAP_CONTENT, 1f).apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+            }
+            kpiGrid.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
+        }
+    }
+
+    // --- settings: daily limit alerts + pop-up counter ---
+    private fun renderSettings() {
+        settingsBox.removeAllViews()
+        val limit = store.limit
+        settingsBox.addView(text("⏰ Daily doomscroll limit", 16f))
+        settingsBox.addView(text(
+            if (limit > 0) "Alerts at ${Math.round(limit * 0.8)} and $limit reels, then every 20 more."
+            else "No limit set. Set one to get alerts and streaks.", 12f, alpha = 0.7f), lp(top = 4))
+
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER
+            hint = if (limit > 0) "$limit" else "e.g. 100"
+            filters = arrayOf(InputFilter.LengthFilter(4))
+            typeface = font
+            textSize = 16f
+            setTextColor(INK)
+            gravity = Gravity.CENTER
+        }
+        val row = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL or Gravity.CENTER_HORIZONTAL }
+        row.addView(input, LinearLayout.LayoutParams(dp(100), WRAP_CONTENT))
+        row.addView(button("Set") {
+            val v = input.text.toString().toIntOrNull()
+            if (v == null || v !in 1..5000) {
+                Toast.makeText(this, "Pick a number from 1 to 5000", Toast.LENGTH_SHORT).show()
+                return@button
+            }
+            store.limit = v
+            askNotificationPermission()
+            statsSignature = null
+            renderSettings()
+        }, LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply { marginStart = dp(8) })
+        if (limit > 0) row.addView(link("turn off") { store.limit = 0; statsSignature = null; renderSettings() })
+        settingsBox.addView(row, LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(6) })
+
+        val popup = CheckBox(this).apply {
+            text = "Show a pop-up counter while scrolling Reels"
+            isChecked = store.overlay
+            typeface = font
+            setTextColor(INK)
+            setOnCheckedChangeListener { _, on -> store.overlay = on }
+        }
+        settingsBox.addView(popup, lp(top = 10))
+    }
+
+    private fun askNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1)
         }
     }
 
@@ -328,5 +419,6 @@ class MainActivity : Activity() {
     companion object {
         private val PINK = 0xFFFF5FA2.toInt()
         private val INK = 0xFF5B3A5E.toInt()
+        private val RED = 0xFFE5383B.toInt()
     }
 }
