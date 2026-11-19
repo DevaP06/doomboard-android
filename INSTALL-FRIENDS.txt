@@ -1,0 +1,22 @@
+🌀 *Doomboard* – counts how many Instagram Reels you scroll + a leaderboard to see who's the most cooked 🧟
+
+📥 *Download:*
+https://github.com/DevaP06/Doomscorls/releases/latest/download/doomboard.apk
+
+*How to install (2 min):*
+1️⃣ Open the link, download, then tap the file to install.
+   • If asked, allow "Install unknown apps" for Chrome/WhatsApp/Files.
+   • Samsung: if it says *blocked by Auto Blocker* → Settings → Security and privacy → Auto Blocker → off. Install, then turn it back on.
+   • If Play Protect warns → *More details* → *Install anyway*. (It warns because the app isn't on the Play Store yet.)
+
+2️⃣ Android 13 or newer: Settings → Apps → *Doomboard* → ⋮ (top right) → *Allow restricted settings*.
+
+3️⃣ Open Doomboard → *Turn on counting* → *Agree & open settings* → tap *Doomboard* → switch it ON.
+
+4️⃣ Pick a nickname and *Join leaderboard* (or stay private, your choice).
+
+Now just use Instagram Reels like normal 😅 A little counter pops up while you scroll.
+
+🔒 It only counts swipes inside Instagram. It can't see your messages, captions or what you watch, and nothing leaves your phone unless you join the leaderboard.
+
+❗ If Play Protect *blocks* it with only an "OK" button, send me a message and I'll install it from my laptop.
