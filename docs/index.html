@@ -103,7 +103,12 @@
   /* faq */
   details { max-width: 720px; margin: 0 auto 12px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px 20px; }
   summary { cursor: pointer; font-weight: 600; font-size: 18px; }
-  details p { color: var(--muted); margin: 10px 0 0; }
+  details p, details li { color: var(--muted); }
+  details p { margin: 10px 0 0; }
+  details ol, details ul { margin: 10px 0 0; padding-left: 22px; }
+  details li { margin-bottom: 6px; }
+  details code { word-break: break-all; }
+  .hgroup { max-width: 720px; margin: 28px auto 12px; font-size: 20px; }
 
   footer { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0 50px; }
 
@@ -122,7 +127,7 @@
 <div class="wrap">
   <nav>
     <a class="brand" href="#"><img src="icon.png" alt="">Doomboard</a>
-    <div class="links"><a href="#features">Features</a><a href="#leaderboard">Leaderboard</a><a href="#install">Install</a><a href="#faq">FAQ</a></div>
+    <div class="links"><a href="#features">Features</a><a href="#leaderboard">Leaderboard</a><a href="#install">Install</a><a href="#help">Help</a><a href="#faq">FAQ</a></div>
   </nav>
 
   <header class="hero">
@@ -188,8 +193,8 @@
     <p class="sub">Doomboard isn't on the Play Store yet, so you install it straight from our GitHub. Takes about 2 minutes.</p>
     <div class="steps">
       <div class="step"><div><b>Download the app</b><p><a href="https://github.com/DevaP06/doomboard-android/releases/latest/download/doomboard.apk">Download Doomboard (.apk)</a>, then open the file. If asked, allow "Install unknown apps" for your browser.</p></div></div>
-      <div class="step"><div><b>Android 13 or newer: allow restricted settings</b><p>Settings → Apps → Doomboard → ⋮ (top right) → Allow restricted settings.</p></div></div>
       <div class="step"><div><b>Turn on counting</b><p>Open Doomboard → Turn on counting → Agree &amp; open settings → tap Doomboard → switch it on.</p></div></div>
+      <div class="step"><div><b>Switch greyed out or "Restricted setting"? (Android 13+)</b><p>That's normal for apps from outside the Play Store. Go to Settings → Apps → Doomboard → ⋮ (top right) → <b>Allow restricted settings</b>, then switch counting on again. The ⋮ option only appears after you've tried once.</p></div></div>
       <div class="step"><div><b>Scroll like normal 😅</b><p>Open Instagram Reels. The counter pops up as you swipe. Join the leaderboard whenever you're ready.</p></div></div>
     </div>
     <div class="warn">
@@ -199,7 +204,80 @@
         <li><b>Obtainium</b> (free, open-source app installer): install <a href="https://github.com/ImranR98/Obtainium/releases" rel="noopener">Obtainium</a>, tap <i>Add App</i>, paste <code>github.com/DevaP06/doomboard-android</code>, then Install. You also get update alerts.</li>
         <li><b>Pause Play Protect for a minute:</b> Play Store → profile picture → Play Protect → ⚙️ → turn off "Scan apps", install Doomboard, then <b>turn it straight back on</b>. Only do this for apps you trust.</li>
       </ul>
+      <p>Something else going wrong? <a href="#help">See all the fixes ↓</a></p>
     </div>
+  </div>
+</section>
+
+<section id="help">
+  <div class="wrap">
+    <h2>🛠️ Having trouble?</h2>
+    <p class="sub">Tap your problem for the fix. Most of these come from Android protecting apps installed outside the Play Store.</p>
+
+    <h3 class="hgroup">📥 Installing</h3>
+    <details><summary>"App blocked to protect your device"</summary>
+      <p>Google's anti-scam filter blocks downloaded apps that use Accessibility, and there's no "Install anyway" button. Fixes, easiest first:</p>
+      <ol>
+        <li><b>Obtainium:</b> install <a href="https://github.com/ImranR98/Obtainium/releases" rel="noopener">Obtainium</a> (free, open source) → <i>Add App</i> → paste <code>github.com/DevaP06/doomboard-android</code> → <i>Install</i>.</li>
+        <li><b>Pause Play Protect:</b> Play Store → profile picture → Play Protect → ⚙️ → turn off <i>Scan apps with Play Protect</i> → install Doomboard → <b>turn it back on straight away</b>.</li>
+        <li><b>Install from a laptop with a USB cable</b> (ask whoever sent you the app).</li>
+      </ol></details>
+    <details><summary>"Unsafe app blocked" / "Harmful app" warning with "More details"</summary>
+      <p>Tap <b>More details → Install anyway</b>. Play Protect warns about any app it hasn't seen on the Play Store before.</p></details>
+    <details><summary>"For your security, your phone is not allowed to install unknown apps"</summary>
+      <p>Tap <b>Settings</b> on that message → turn on <b>Allow from this source</b> for the app you downloaded with (Chrome, WhatsApp, Files…) → go back and tap Install.</p></details>
+    <details><summary>Samsung: "Blocked by Auto Blocker"</summary>
+      <p>Settings → <b>Security and privacy</b> → <b>Auto Blocker</b> → turn it off → install Doomboard → turn Auto Blocker back on. Doomboard keeps working with it on.</p></details>
+    <details><summary>"App not installed" or "conflicts with an existing package"</summary>
+      <p>You have an older test version signed differently. Uninstall Doomboard first, then install again. This resets your counts on that phone.</p></details>
+    <details><summary>"There was a problem parsing the package"</summary>
+      <p>The download didn't finish, or your phone is older than Android 8.0. Delete the file, download it again on a stable connection, and check Settings → About phone → Android version.</p></details>
+
+    <h3 class="hgroup">🔐 Turning on counting</h3>
+    <details><summary>The Doomboard switch is greyed out, or says "Restricted setting"</summary>
+      <p>Android 13+ locks Accessibility for apps from outside the Play Store. Try to switch Doomboard on once (you'll see the "Restricted setting" message), then go to Settings → Apps → <b>Doomboard</b> → <b>⋮</b> (top right) → <b>Allow restricted settings</b> → confirm with your PIN or fingerprint. Now switch it on again.</p></details>
+    <details><summary>I can't find Doomboard in Accessibility settings</summary>
+      <p>Look under <b>Installed apps</b> or <b>Downloaded apps</b> inside Settings → Accessibility (on Samsung: Settings → Accessibility → <b>Installed apps</b>). Or open Doomboard and tap <b>Turn on counting</b>, which takes you to the right screen.</p></details>
+    <details><summary>Is it safe to give Accessibility access?</summary>
+      <p>Doomboard only receives events from the Instagram app and only uses them to notice a swipe to a new Reel. It never reads captions, messages or usernames, never records your screen, and does nothing in other apps. You can switch it off any time in the same settings screen.</p></details>
+
+    <h3 class="hgroup">🔢 Counting &amp; pop-up</h3>
+    <details><summary>The count isn't going up</summary>
+      <ol>
+        <li>Open Doomboard: it should say <b>✅ Counting Reels in Instagram</b>. If it says counting is off, turn it on again.</li>
+        <li>Make sure you're in Instagram's <b>Reels</b> tab or a full-screen Reel. Feed posts and Stories don't count.</li>
+        <li>Still nothing? Switch Doomboard off and on in Accessibility settings, or restart your phone.</li>
+        <li>If Instagram just updated, its layout may have changed. Let us know on <a href="https://github.com/DevaP06/doomboard-android/issues">GitHub</a>.</li>
+      </ol></details>
+    <details><summary>Counting keeps turning itself off (common on Samsung, Xiaomi, Oppo, Vivo)</summary>
+      <p>Battery savers put apps to sleep and stop their services. Let Doomboard stay awake:</p>
+      <ul>
+        <li><b>Any phone:</b> Settings → Apps → Doomboard → Battery → <b>Unrestricted</b>.</li>
+        <li><b>Samsung:</b> Settings → Battery (or Battery and device care) → <b>Background usage limits</b> → <b>Never sleeping apps</b> → add Doomboard.</li>
+        <li><b>Xiaomi / Redmi / POCO:</b> Settings → Apps → Doomboard → Battery saver → <b>No restrictions</b>, and turn on <b>Autostart</b>.</li>
+      </ul></details>
+    <details><summary>I don't see the pop-up counter</summary>
+      <p>Check that <b>Show a pop-up counter while scrolling Reels</b> is ticked in Doomboard. The pop-up appears only when you swipe to a new Reel and fades after 4 seconds.</p></details>
+    <details><summary>No limit alerts</summary>
+      <p>Set a daily limit in Doomboard, then allow notifications: Settings → Apps → Doomboard → <b>Notifications</b> → on. Alerts come at 80%, at 100%, then every 20 reels over.</p></details>
+    <details><summary>The count seems a bit off</summary>
+      <p>Swiping back to a previous Reel counts it again, and Reels opened from DMs count too. It's built to be close, not perfect.</p></details>
+
+    <h3 class="hgroup">🏆 Leaderboard</h3>
+    <details><summary>"couldn't load" on the leaderboard</summary>
+      <p>Check your internet, then close and reopen Doomboard. If it's still down, the server may be waking up. Try again in a few minutes.</p></details>
+    <details><summary>"That name is taken" or "Let's keep it friendly"</summary>
+      <p>Nicknames are unique and filtered. Tap 🎲 for a random one, or add a number to yours.</p></details>
+    <details><summary>How do I leave the leaderboard?</summary>
+      <p>In Doomboard tap <b>leave &amp; delete my data</b>. Your nickname and scores are deleted from the server. Your counts on your phone stay.</p></details>
+
+    <h3 class="hgroup">🔄 Updating &amp; removing</h3>
+    <details><summary>How do I update?</summary>
+      <p>Installed with Obtainium? It tells you and updates in one tap. Otherwise, download from the same link and tap <b>Update</b>. Your counts and nickname stay. You may need to pause Play Protect again for that minute.</p></details>
+    <details><summary>How do I uninstall?</summary>
+      <p>If you joined the leaderboard, first tap <b>leave &amp; delete my data</b> in the app so your server data is removed too. Then uninstall Doomboard like any app.</p></details>
+
+    <p class="sub" style="margin-top:28px">Still stuck? <a href="https://github.com/DevaP06/doomboard-android/issues">Open an issue on GitHub</a> with your phone model and a screenshot.</p>
   </div>
 </section>
 

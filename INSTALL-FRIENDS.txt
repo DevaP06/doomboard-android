@@ -9,9 +9,9 @@ https://github.com/DevaP06/doomboard-android/releases/latest/download/doomboard.
    • Samsung: if it says *blocked by Auto Blocker* → Settings → Security and privacy → Auto Blocker → off. Install, then turn it back on.
    • If Play Protect warns → *More details* → *Install anyway*. (It warns because the app isn't on the Play Store yet.)
 
-2️⃣ Android 13 or newer: Settings → Apps → *Doomboard* → ⋮ (top right) → *Allow restricted settings*.
+2️⃣ Open Doomboard → *Turn on counting* → *Agree & open settings* → tap *Doomboard* → switch it ON.
 
-3️⃣ Open Doomboard → *Turn on counting* → *Agree & open settings* → tap *Doomboard* → switch it ON.
+3️⃣ Switch greyed out / says "Restricted setting"? (Android 13+) Settings → Apps → *Doomboard* → ⋮ (top right) → *Allow restricted settings*, then switch it on again. (The ⋮ option only shows up after you've tried once.)
 
 4️⃣ Pick a nickname and *Join leaderboard* (or stay private, your choice).
 
